@@ -1,18 +1,18 @@
 /*
- * 旅費精算申請のプログラム
+ * 自動採番処理他
  * Copyright (c) 2013 Cybozu
- *
+ * Modified 2014 mniizuma
  * Licensed under the MIT License
  */
 (function () {
  
     "use strict"; 
-// レコード追加、編集の保存前に自動採番を作成する
-    var eventSubmit =['app.record.create.submit', 'app.record.index.create.submit',
-                      'app.record.edit.submit', 'app.record.index.edit.submit'];
-    kintone.events.on(eventSubmit, function (event) {
+// レコード追加に、候補の連番を挿入する
+   
+    function add_regno( event ) {
+
+    if ( event.reuse ) retuen; //再利用の場合はなにもしない
         
-  if (!event.record['regno'].value ) {
         // アプリIDを取得する
             var appId = kintone.app.getId();
             var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId + '&query=' + encodeURI('order by recordno desc limit 1&fields[0]=regno');
@@ -28,17 +28,14 @@
                 if(window.JSON){
                     var obj = JSON.parse(xmlHttp.responseText);
                     if (obj.records[0] != null){
-                        alert(obj.records[0]['regno'].value);
                         try{
                             regno = parseInt(obj.records[0]['regno'].value) +1;
                         } catch(e){
                             event.error = '番号が取得できません。';
-                            alert("取得エラー");
                             return event;
                         }
                     }
                     
-                    alert("番号 " + regno + " を登録します");
                     event.record['regno']['value'] = regno;
                 } else{
                     event.error = xmlHttp.statusText;
@@ -47,6 +44,9 @@
                 record['regno'].error = '番号が取得できません。';
             }
       return event;
-  } else return;     
-    });
+    }
+    
+//新規レコードの場合
+    kintone.events.on('app.record.create.show', add_regno );
+        
 })();
