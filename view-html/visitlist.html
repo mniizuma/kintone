@@ -1,0 +1,15 @@
+<div ng-app ng-cloak>
+  <div id="members" ng-controller="Member.Ctrl">
+    <table id="visitlist">
+<thead>
+<tr><td></td><td>住所</td><td>名前</td></tr>
+</thead>
+<tbody>
+      <tr ng-repeat="member in members">
+        <td><input type="checkbox" name="q1" value=""></td><td>{{member.Address}}</td><td><span ng-click="click(member)">{{member.name}}</span></td>
+      </tr>
+</tbody>
+    </table>
+<input type="button" value="更新" onclick="boxCheck()">
+  </div>
+</div>
