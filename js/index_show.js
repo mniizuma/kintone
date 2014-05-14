@@ -15,6 +15,15 @@ var gc;
         }
     };
     
+    //訪問予定リスト追加
+    function append() {
+        var i = 0;
+        
+       //チェックされた項目を記録する変数
+  
+        alert("pushed button");
+    }
+    
  
     //訪問予定一覧用function    
     function visitview (e) {
@@ -22,7 +31,7 @@ var gc;
         var members = new Array();
         for (i = 0; i < e.records.length; i++) {
                 var record = e.records[i];
-                members.push({'Address': record.Address.value, 'name': record.name.value});
+                members.push({'recordno': record.recordno.value, 'Address': record.Address.value, 'name': record.name.value});
                     }
                 // スコープを取得
                 var scope = angular.element(document.querySelector('#members')).scope();
@@ -31,8 +40,16 @@ var gc;
                 // リストに値をセット
                     scope.members = members;
                     });
-               $("#visitlist tbody").sortable();
-            }
+        
+        //datepicker呼び出し
+        $.datepicker.setDefaults( $.datepicker.regional[ "ja" ] );   
+        $( "#datepicker" ).datepicker();
+
+        //テーブルドラッグ＆ドロップ設定
+        $("#visitlist tbody").sortable();
+        
+        $("#append").click(append);
+        }
 
     //住所からマーカーを作成して地図に表示する    
     function createmarker( address,title ) {
