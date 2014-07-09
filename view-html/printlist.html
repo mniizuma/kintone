@@ -1,0 +1,14 @@
+<div ng-app ng-cloak>
+  <div id="members" ng-controller="Member.Ctrl">
+<table id="printlist" class="viewtable">
+<thead>
+<tr><td>作成日</td><td >印刷リスト</td></tr>
+</thead>
+<tbody>
+      <tr ng-repeat="member in members">
+        </td><td class="date_col">{{member.date}}</td>  <td><a href="{{member.detaillink}}" target="_blank">{{member.printlist}}</a>    
+       </tr>
+</tbody>
+</table>
+  </div>
+</div>

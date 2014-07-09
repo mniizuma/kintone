@@ -3,14 +3,16 @@ width: 100%;
 border-collapse: collapse;
 }
 
-.viewtable th{
+.viewtable thead tr{
 width: 25%;
 padding: 6px;
 text-align: left;
 vertical-align: top;
 color: #333;
-background-color: #eee;
+background-color: #b5e0ed;
 border: 1px solid #b9b9b9;
+font-weight: bold;
+text-align: center;
 }
 
 .viewtable td{
@@ -19,6 +21,65 @@ background-color: #fff;
 border: 1px solid #b9b9b9;
 }
 
-.viewtable tr:nth-child(2n+1) {
+.viewtable td.button_col{
+width:30px;
+text-align:center;
+}
+
+.viewtable td.ios_col{
+width:30px;
+}
+
+.viewtable td.all_col{
+width:50px;
+}
+
+.viewtable td.status_col{
+width:90px;
+}
+
+.viewtable td.code_col{
+width:150px;
+}
+
+.viewtable td.date_col{
+width:100px;
+}
+
+.viewtable tbody tr.ng-scope:nth-child(2n+1) {
     background: #F0FFFF;
 }
+
+.submit {
+    /* 文字サイズを1.4emに指定 */
+    font-size: 1.8em;
+    /* 文字の太さをboldに指定 */
+    font-weight: bold;
+    /* 縦方向に10px、*/
+    padding: 10px 30px;
+}
+
+.black {
+    /* 文字サイズを1.4emに指定 */
+    font-size: 1.8em;
+    /* 文字の太さをboldに指定 */
+    font-weight: bold;
+	color:black;
+}
+
+.red {
+    /* 文字サイズを1.4emに指定 */
+    font-size: 1.8em;
+    /* 文字の太さをboldに指定 */
+    font-weight: bold;
+	color:red;
+}
+
+.gray {
+    /* 文字サイズを1.4emに指定 */
+    font-size: 1.8em;
+    /* 文字の太さをboldに指定 */
+    font-weight: bold;
+	color:#c7c3c3;
+}
+

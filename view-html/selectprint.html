@@ -1,0 +1,16 @@
+<div ng-app ng-cloak>
+  <div id="members" ng-controller="Member.Ctrl">
+<p>印刷リスト名： <input type="text" id="printlist" size="40"></p>
+<table id="selectprint" class="viewtable">
+<thead>
+<tr><td class="all_col"><input type="checkbox" id="all">全て</td></td><td>印刷リスト</td><td>名前</td><td>住所</td></tr>
+</thead>
+<tbody>
+      <tr ng-repeat="member in members">
+        <td class="button_col"><input type="checkbox" name="print" value="{{member.recordno}}"></td><td class="status_col">{{member.printlist}}</td><td><a href="{{member.detaillink}}" target="_blank">{{member.name}}</a></td><td>{{member.Address}}</td>
+      </tr>
+</tbody>
+</table>
+<input type="button" value="印刷リストを作成" id="append" class="submit">
+  </div>
+</div>

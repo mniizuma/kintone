@@ -1,0 +1,14 @@
+<div ng-app ng-cloak>
+  <div id="members" ng-controller="Member.Ctrl">
+<table id="eventmemverlist" class="viewtable">
+<thead>
+<tr><td class="button_col"></td><td class="button_col"></td><td class="status_col">参加状況</td><td>イベント名</td><td class="date_col">新登録番号＋枝番</td><td>名前</td></tr>
+</thead>
+<tbody>
+      <tr ng-repeat="member in members">
+        <td class="button_col"><input type="button" name="complete" id="{{member.id}}" value="参加" class="black"></td><td class="button_col"><input type="button" name="cancel" id="{{member.id}}" value="不参加" class="black"></td><td class="status_col">{{member.eventstatus}}</td><td>{{member.eventname}}</td><td class="code_col">{{member.meibocd}}</td><td>{{member.name}}</td>
+      </tr>
+</tbody>
+</table>
+  </div>
+</div>

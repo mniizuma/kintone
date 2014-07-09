@@ -1,0 +1,21 @@
+<div ng-app ng-cloak>
+  <div id="members" ng-controller="Member.Ctrl">
+<table id="visitlist" class="viewtable">
+<thead>
+<tr><td class="button_col"></td><td class="button_col"></td><td class="button_col"></td><td>名前</td><td>住所</td><td class="ios_col"></td></tr>
+</thead>
+<tbody>
+      <tr ng-repeat="member in members">
+        <td class="button_col"><input type="button" name="cancel" id="{{member.recordno}}" value="除外" class="black"></td><td class="button_col"><input type="button" name="complete" id="{{member.recordno}}" value="完了" class="black"></td><td class="button_col"><input type="button" name="fuzai" id="{{member.recordno}}" value="不在" class="black"></td><td><a href="{{member.detaillink}}" target="_blank">{{member.name}}</a></td><td><a href="http://maps.google.com/maps?q={{member.Address}}" target="_blank">{{member.Address}}</a></td><td class="ios_col"><input type="button" ng-click="click(member)" value="Naviへ" ></td>
+      </tr>
+</tbody>
+</table>
+<input type="button" value="訪問順を保存" id="save" class="submit">
+  </div>s
+  <div id="dialog" title="訪問時の状況を入力して下さい">
+<form>
+<input type="hidden" id="hidden_recid">
+<textarea id="vmemo" cols="35" rows="3"></textarea>
+</form></div>
+
+</div>

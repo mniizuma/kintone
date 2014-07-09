@@ -1,18 +1,16 @@
 <div ng-app ng-cloak>
   <div id="members" ng-controller="Member.Ctrl">
-<form>
 <p>訪問予定日： <input type="text" id="datepicker" size="10"></p>
 <table id="visitlist" class="viewtable">
 <thead>
-<tr><td></td><td>訪問予定日</td><td>住所</td><td>名前</td></tr>
+<tr><td class="button_col"></td><td>訪問状況</td><td class="date_col">訪問予定日</td><td>名前</td><td>住所</td></tr>
 </thead>
 <tbody>
       <tr ng-repeat="member in members">
-        <td><input type="checkbox" name="q1" value="{[member.recordno]}"></td><td><span></span><td>{{member.Address}}</td><td><span ng-click="click(member)">{{member.name}}</span></td>
+        <td class="button_col"><input type="checkbox" name="visit" value="{{member.recordno}}"></td><td class="status_col">{{member.vstatus}}</td><td class="date_col">{{member.vdate}}</td><td><a href="{{member.detaillink}}" target="_blank">{{member.name}}</a></td><td>{{member.Address}}</td>
       </tr>
 </tbody>
 </table>
-<input type="button" value="訪問予定リストに登録" onClick="append()">
-</form>
+<input type="button" value="訪問予定リストを作成" id="append" class="submit">
   </div>
 </div>
