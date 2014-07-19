@@ -159,7 +159,7 @@ function create_intro_record(from_id,from_branch,from_name,to_id,to_branch,to_na
         objParam['record']['name2']['value'] = to_name;
         
  //新しい紹介者名簿コードを用意する
-            var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId + + '&query='  + encodeURI('order by intro_no desc limit 1&fields[0]=intro_no');
+            var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId + '&query=' + encodeURI('order by intro_no desc limit 1&fields[0]=intro_no');
             var xmlHttp = new XMLHttpRequest();
             var intro_no = 0;
  
@@ -287,6 +287,8 @@ function create_intro(){
 	create_master_w_intro_and_show(regno,"0",this_cd,this_name);//後援会名簿に登録して開く
 	
 }
+
+
 //訪問状況を変更した場合の処理
 function change_vstatus(event) {
 	var record = event.record;
@@ -346,16 +348,177 @@ function set_btn(id,text) {
 
 }
 
+//検索結果からユーザーを1人選んで、紹介者に登録する
+function user_select() {
+    	var this_td=$(this).parent()[0];
+    	var this_row=$(this_td).parent()[0];
+    	var name_col = $(this_row).children('td:eq(1)');
+    	var address_col = $(this_row).children('td:eq(2)');
+    	var tel_col = $(this_row).children('td:eq(3)');
+    	var code_col = $(this_row).children('td:eq(4)');
+		var this_code = $(code_col).text().split("-");
+		var to_id = this_code[0];
+		var to_branch = this_code[1];
+		var to_name = $(name_col).text();
+		var this_address = $(address_col).text();
+		var this_tel = $(tel_col).text();
+
+		var this_tr = '<tr><td>'+to_name + "</td><td>" + this_address + "</td><td>" + this_tel +  "</td></tr>";
+		
+		$("#selected").remove();
+		$("#intro_dialog" ).append('<table id="selected" name="selected" class="viewtable"></table>');
+
+		 $("#selected").append(this_tr);
+		 $("#intro_name_div").remove();
+
+		$( "#intro_dialog" ).dialog({
+		　title:"紹介した人として登録します",
+　　		　autoOpen: false,
+　　		　modal: true,
+		  width:750,
+		  hight:250,
+　　		　buttons: {
+　　		　　"登録": function(){
+				var record = kintone.app.record.get();
+				var from_id = record["record"]["regno"]["value"];
+				var from_branch = record["record"]["branch"]["value"];
+				var from_name = record["record"]["name"]["value"];
+				create_intro_record(from_id,from_branch,from_name,to_id,to_branch,to_name);
+				$(this).dialog('close');
+				location.reload();
+　　　　			},
+			'取り消し': function(){
+				$(this).dialog('close');
+				}
+　　　		}
+　　		});
+		$( "#intro_dialog2" ).dialog("close");
+
+		$( "#intro_dialog" ).dialog("open");
+	
+}
+
+//検索結果をDialogに表示する
+function result_dialog(name) {
+	//nameをキーに総員名簿を検索する
+		var records=[];
+		var appId = kintone.app.getId();
+		var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId + encodeURI('&query=name like "' + name +'"' + 'order by name asc');
+		var xmlHttp = new XMLHttpRequest();
+ 
+		// 同期リクエストを行う
+		xmlHttp.open("GET", appUrl, false);
+		xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
+		xmlHttp.send(null);
+ 
+		if (xmlHttp.status == 200){
+    		      if(window.JSON){
+     	    	       var obj = JSON.parse(xmlHttp.responseText);
+	 				   if (obj.records[0] != null){
+                      	  try{
+							var records = obj.records;
+							} catch(e){
+                          }
+                    }
+                }
+           }
+           
+		   $("#searchresult").remove();//テーブルエリアを削除
+		   $("#intro_dialog2" ).append('<table id="searchresult" name="searchresult" class="viewtable"></table>');
+
+		   
+		   for( var i=0;i < records.length;i++ ) {
+		   		var record = records[i];
+		   		var this_tr = '<tr><td><input type="button" class="button_col" name = "select" value="選択" id="' + record.recordno.value + '"</td><td>'+record.name.value + "</td><td>" + record.Address.value + "</td><td>" + record.tel1.value + '</td><td class="code_col">' + record.meibocode.value + "</td></tr>"
+		   		$("#searchresult").append(this_tr);
+		   }
+		$( "#intro_dialog2" ).dialog({
+		　title:"検索結果から選択してください",
+　　		　autoOpen: false,
+　　		　modal: true,
+		  width:750,
+		  maxHeight:700,
+　　		　buttons: {
+　　		　　"取り消し": function(){
+				$(this).dialog('close');
+　　　　			}
+　　　		}
+　　		});
+
+		$( "#intro_dialog2" ).dialog("open");
+		$('[name="select"]').click(user_select);
+	
+}
+
+//既に登録済みの別の人を紹介した人として等録す場合
+function create_intro2(){
+		$("#selected").remove();
+		$("#intro_name_div").remove();//氏名欄を削除
+		$("#intro_dialog" ).append('<div id="intro_name_div"> 支援者氏名：<input type="text" id="intro_name" size="35" ></div>');
+		$( "#intro_dialog" ).dialog({
+		　title:"支援者を検索",
+　　		　autoOpen: false,
+　　		　modal: true,
+　　		　buttons: {
+　　		　　"検索": function(){
+				result_dialog($("#intro_name").val());
+				$(this).dialog('close');
+　　　　			},
+			'取り消し': function(){
+				$(this).dialog('close');
+				}
+　　　		}
+　　		});
+
+		$( "#intro_dialog" ).dialog("open");
+}
+
+
 //詳細画面表示・編集用
 function detail_page( event ) {
 //操作用ボタンの追加
 		var zip_btn = set_btn("zip_btn","郵便番号検索");
-		var zip_btn = set_btn("newfam_btn","家族を追加");
-		var zip_btn = set_btn("intro_btn","紹介した人を追加");
+		var fam_btn = set_btn("newfam_btn","家族を追加");
+		var intro_btn = set_btn("intro_btn","新規登録の場合");
+		var intro_btn2 = set_btn("intro_btn2","検索して追加");
 		
 		$("#zip_btn").click( zip_to_addr);
 		$("#newfam_btn").click( create_new_family);
 		$("#intro_btn").click( create_intro);
+		$("#intro_btn2").click( create_intro2);
+
+//登録染みの紹介者を追加するための準備
+	//dialog情報の定義
+		var area = kintone.app.record.getSpaceElement("intro_dialog");
+		var dlg = document.createElement('div');
+        dlg.setAttribute('id', 'intro_dialog');
+        dlg.setAttribute('name', 'intro_dialog');
+        area.appendChild(dlg);
+ 
+		$( "#intro_dialog" ).dialog({
+　		　autoOpen: false,
+　　		　modal: true,
+　　		});
+//
+		var dlg2 = document.createElement('div');
+        dlg2.setAttribute('id', 'intro_dialog2');
+        dlg2.setAttribute('name', 'intro_dialog2');
+        area.appendChild(dlg2);
+        
+		$( "#intro_dialog2" ).dialog({
+		　title:"検索結果から選択してください",
+　　		　autoOpen: false,
+　　		　modal: true,
+		  width:500,
+		  hight:400,
+　　		　buttons: {
+　　		　　"取り消し": function(){
+				$(this).dialog('close');
+　　　　			}
+　　　		}
+　　		});
+
+
 	
 }
 

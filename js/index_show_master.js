@@ -673,12 +673,82 @@ var current_rec=0;
      
     }
     
+    //選択された処理項目を元に検索フィルターを追加する
+    
+    function add_procfilter() {
+	    var search_type = $("#searchtype option:selected").val();
+		var appId = kintone.app.getId();
+		var query = kintone.app.getQueryCondition();//query 部分を取得
+	    var queryall = kintone.app.getQuery();//現状のquery全体を取得
+		var queryetc=queryall.substr(queryall.indexOf("order"));　//order以降を切り出し
+
+	    var proc_query = "";
+		var this_query = "";
+	    
+	    $('[name="proc"]:checked').each(function(){
+	    	if(search_type == "1") {
+					this_query = $(this).attr("id")+' in ("'+$(this).val()+'")';
+
+	    	}else{
+					this_query = $(this).attr("id")+' not in ("'+$(this).val()+'")';
+				}
+					
+			if(proc_query == "") {
+				proc_query = this_query;
+			}else {
+				proc_query = this_query + " and " + proc_query;
+				}
+
+			});
+	    
+	    if(!query) {
+		    query =  proc_query+" " + queryetc;
+	    }else {
+			query =  "("+proc_query+")" + "and (" + query + ") "+ queryetc;
+		    
+			}
+	    
+		var detaillink = "/k/"+appId+"/?view=135057&query=" + encodeURI(query);
+
+		window.open(detaillink,"_self" );
+	    }
+    
     //印刷リスト作成
     function printview( e ) {
 	     var i;
         var members = new Array();
         var appId = kintone.app.getId();
          
+       //一覧の上部あき部分に処理項目検索用ボタンを設定,登録済みの場合はいったん削除 
+        var btn_check = document.getElementById('my_index_button');
+        if (!btn_check){//ボタンが未作成の場合作成する
+        
+            var myIndexButton = document.createElement('button');
+            myIndexButton.id = 'procsearch';
+            myIndexButton.innerHTML = '処理項目設定';
+
+			}
+		kintone.app.getHeaderMenuSpaceElement().appendChild(myIndexButton);
+
+		//dialogの初期設定		
+		$( "#procdialog" ).dialog({
+　　		　autoOpen: false,
+　　		　modal: true,
+　　		　buttons: {
+　　		　　"適用する": function(){
+				add_procfilter();//選択された処理項目を元にフィルターを追加する
+				$(this).dialog('close');
+　　　　			},
+　　		　　"閉じる": function(){
+				$(this).dialog('close');
+　　　　			}
+　　　		}
+　　		});
+
+        $("#procsearch").click(function(){
+	       	$( "#procdialog" ).dialog("open");
+        });
+
         for (i = 0; i < e.records.length; i++) {
                 var record = e.records[i];
                 var detail_link = "/k/"+appId+"/show#record=" + record.recordno.value; 
@@ -695,6 +765,7 @@ var current_rec=0;
                     });
         
         $("#append").click(pr_append);
+
         $("#all").click(function() {
 	         $('[name="print"]').prop("checked", $(this).prop("checked"));
 	         });
