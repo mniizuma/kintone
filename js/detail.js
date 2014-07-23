@@ -81,7 +81,7 @@ function zip_to_addr() {
 }
 
 //指定された新登録番号で新しいレコードを登録し詳細画面を表示する
-function create_master_and_show( regno, branch,zip,address,chiiki,tel ) {
+function create_master_and_show( regno, branch,zip,address,address2,chiiki,tel ) {
         var objParam = {};
 		var appId = kintone.app.getId();
         objParam['app'] = appId;// アプリ番号
@@ -94,6 +94,8 @@ function create_master_and_show( regno, branch,zip,address,chiiki,tel ) {
         objParam['record']['zip1']['value'] = zip; 
         objParam['record']['Address'] = {}; // status    
         objParam['record']['Address']['value'] = address; 
+        objParam['record']['Address1_2'] = {}; // status    
+        objParam['record']['Address1_2']['value'] = address2; 
         objParam['record']['chiiki1'] = {}; // status    
         objParam['record']['chiiki1']['value'] = chiiki; 
         objParam['record']['tel1'] = {}; // status    
@@ -110,6 +112,36 @@ function create_master_and_show( regno, branch,zip,address,chiiki,tel ) {
                         return;
                     });     
     }
+
+//指定されたレコードの住所等を行進する
+function update_master_address( id,chiiki,zip,address,address2,tel) {
+	
+	var objParam = {};
+        objParam['app'] = kintone.app.getId();// アプリ番号
+        objParam['id'] = id;    // レコード番号
+        objParam['record'] = {};
+        objParam['record']['chiiki1'] = {}; // status    
+        objParam['record']['chiiki1']['value'] = chiiki; 
+        objParam['record']['zip1'] = {}; // status    
+        objParam['record']['zip1']['value'] = zip; 
+        objParam['record']['Address'] = {}; // status    
+        objParam['record']['Address']['value'] = address; 
+        objParam['record']['Address1_2'] = {}; // status    
+        objParam['record']['Address1_2']['value'] = address2; 
+        objParam['record']['tel1'] = {}; // status    
+        objParam['record']['tel1']['value'] = tel; 
+
+        // レコードを更新します
+        kintone.api('/k/v1/record', 'PUT', objParam, function(resp){
+                // 成功時は画面をリロードします
+                //location.reload(true);
+                    }, function(resp) {
+                        // エラー時はメッセージを表示して、処理を中断します
+                        //alert('error->' + resp.message);
+                        return;
+                    });     
+	
+}
 
 //指定された新登録番号と紹介者名簿関連づけ用のレコード番号を登録し詳細画面を表示する
 function create_master_w_intro_and_show( regno, branch,intro_cd,intro_name ) {
@@ -210,6 +242,7 @@ function create_new_family() {
 			var record = kintone.app.record.get();
 			var regno = record["record"]["regno"]["value"];//支援者の新登録番号取得
 			var address = record["record"]["Address"]["value"];//住所
+			var address2 = record["record"]["Address1_2"]["value"];//住所
 			var zip = record["record"]["zip1"]["value"];//郵便番号
 			var chiiki = record["record"]["chiiki1"]["value"];//地域区分
 			var tel = record["record"]["tel1"]["value"];//電話番号
@@ -245,7 +278,7 @@ function create_new_family() {
                 return false;
             }
 
-	create_master_and_show(regno,branch,zip,address,chiiki,tel);
+	create_master_and_show(regno,branch,zip,address,address2,chiiki,tel);
 }
 
 //紹介した人を新規登録
@@ -312,20 +345,47 @@ function submit_detail(event) {
 //以下紹介者の処理	
 	var intro_cd = record["intro_cd"]["value"]; //この人を紹介した人のcodeを取得
 	
-	if( !intro_cd ) return;//空欄ならなにもしない
+	if( intro_cd ) {
 	
-	var intro_data = intro_cd.split("-"); //新登録番号と枝番を取り出す
-	var intro_name = record["intro_name"]["value"]; //この人を紹介した人の名前を取得
+		var intro_data = intro_cd.split("-"); //新登録番号と枝番を取り出す
+		var intro_name = record["intro_name"]["value"]; //この人を紹介した人の名前を取得
 	
-    var this_regno = record["regno"]["value"];
-	var this_branch = record["branch"]["value"];
-	var this_name = record["name"]["value"];            
-	create_intro_record(intro_data[0],intro_data[1],intro_name,this_regno,this_branch,this_name);//紹介者名簿にいったん登録
+		var this_regno = record["regno"]["value"];
+		var this_branch = record["branch"]["value"];
+		var this_name = record["name"]["value"];            
+		create_intro_record(intro_data[0],intro_data[1],intro_name,this_regno,this_branch,this_name);//紹介者名簿にいったん登録
                           
-	record["intro_cd"]["value"] = "";
-	record["intro_name"]["value"] = "";
+		record["intro_cd"]["value"] = "";
+		record["intro_name"]["value"] = "";
 
+	}
+//家族がいる場合の住所等の自動変更
+
+	var branch = record["branch"]["value"];
+	if( branch != "0" ) return(event); //家族の場合は処理しない
+	var regno = record["regno"]["value"];
 	
+	//家族の住所等に筆頭者の住所等をあわせる
+	var appId = kintone.app.getId();
+    var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId + encodeURI('&query=branch!=0 and regno='+regno+ 'order by recordno desc &fields[0]=recordno');
+    var xmlHttp = new XMLHttpRequest();
+ 
+    // 同期リクエストを行う
+    xmlHttp.open("GET", appUrl, false);
+    xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
+    xmlHttp.send(null);
+ 
+    if (xmlHttp.status != 200) return(event);//該当するものがないのでreturn
+    
+    if(!window.JSON) return(event);
+    
+    var obj = JSON.parse(xmlHttp.responseText);
+    
+    for( var i=0;i < obj.records.length;i++ ) {
+    	var child_recordno = parseInt(obj.records[i]["recordno"]["value"]);
+		update_master_address(child_recordno,record["chiiki1"]["value"],record["zip1"]["value"],record["Address"]["value"],record["Address1_2"]["value"],record["tel1"]["value"]);
+		}
+
 	return( event );
 	
 }
@@ -486,6 +546,7 @@ function detail_page( event ) {
 		$("#newfam_btn").click( create_new_family);
 		$("#intro_btn").click( create_intro);
 		$("#intro_btn2").click( create_intro2);
+		
 
 //登録染みの紹介者を追加するための準備
 	//dialog情報の定義
@@ -518,8 +579,20 @@ function detail_page( event ) {
 　　　		}
 　　		});
 
+//家族の場合住所等を編集不可にしておく
 
-	
+		var record = event.record;
+		
+		if(record["branch"]["value"] == "0" ) return(event);
+		
+		record["chiiki1"]["disabled"] = true;
+		record["zip1"]["disabled"] = true;
+		record["Address"]["disabled"] = true;
+		record["Address1_2"]["disabled"] = true;
+		record["tel1"]["disabled"] = true;
+		
+		return(event);
+
 }
 
 
