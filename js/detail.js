@@ -80,8 +80,51 @@ function zip_to_addr() {
             });
 }
 
+//郵便番号かr地域区分へ
+function zip_to_chiiki(){
+	var record = kintone.app.record.get();
+	var zip = record["record"]["zip1"]["value"];
+	var	tblId = 113;// 郵便番号-地域区分アプリid 本番用
+
+	var appUrl = kintone.api.url('/k/v1/records');
+	if (appUrl.indexOf("hanare") > 0 ) {
+		tblId = 91; //開発用
+	}
+    var appUrl = appUrl + '?app='+ tblId + '&query=zip="' + zip + '" ' + encodeURI('order by zip desc limit 1&fields[0]=chiiki');
+    var xmlHttp = new XMLHttpRequest();
+    var chiiki = 0;
+ 
+    // 同期リクエストを行う
+    xmlHttp.open("GET", appUrl, false);
+	xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
+	xmlHttp.send(null);
+ 
+            if (xmlHttp.status == 200){
+                if(window.JSON){
+                    var obj = JSON.parse(xmlHttp.responseText);
+                    if (obj.records[0] != null){
+                        try{
+                            chiiki = parseInt(obj.records[0]['chiiki'].value);
+                        } catch(e){
+                            chiiki = 0;  
+                        }
+                    }
+                    
+                } else{
+                   chiiki = 0;                }
+            } else{
+				chiiki = 0;              }
+            
+
+	if( chiiki > 0 ) {
+		  record["record"]["chiiki1"]["value"] = chiiki;
+		  kintone.app.record.set(record);
+	}
+	
+}
+
 //指定された新登録番号で新しいレコードを登録し詳細画面を表示する
-function create_master_and_show( regno, branch,zip,address,address2,chiiki,tel ) {
+function create_master_and_show( regno, branch,name,zip,address,address2,chiiki,tel ) {
         var objParam = {};
 		var appId = kintone.app.getId();
         objParam['app'] = appId;// アプリ番号
@@ -90,6 +133,8 @@ function create_master_and_show( regno, branch,zip,address,address2,chiiki,tel )
         objParam['record']['regno']['value'] = regno; 
         objParam['record']['branch'] = {}; // status    
         objParam['record']['branch']['value'] = branch; 
+        objParam['record']['name'] = {}; // status    
+        objParam['record']['name']['value'] = name; 
         objParam['record']['zip1'] = {}; // status    
         objParam['record']['zip1']['value'] = zip; 
         objParam['record']['Address'] = {}; // status    
@@ -101,19 +146,20 @@ function create_master_and_show( regno, branch,zip,address,address2,chiiki,tel )
         objParam['record']['tel1'] = {}; // status    
         objParam['record']['tel1']['value'] = tel; 
 
- 
         // レコードを登録
        kintone.api('/k/v1/record', 'POST', objParam, function(resp){
-		   	window.open("/k/"+appId+"/show#record=" + resp.id + "&mode=edit","",""); //編集モードで表示
+	   		window.open("/k/"+appId+"/show#record=" + resp.id + "&mode=edit","",""); //編集モードで表示
 
                     }, function(resp) {
                         // エラー時はメッセージを表示して、処理を中断します
                         //alert('error->' + resp.message);
                         return;
                     });     
+
     }
 
-//指定されたレコードの住所等を行進する
+
+//指定されたレコードの住所等を更新する
 function update_master_address( id,chiiki,zip,address,address2,tel) {
 	
 	var objParam = {};
@@ -135,6 +181,28 @@ function update_master_address( id,chiiki,zip,address,address2,tel) {
         kintone.api('/k/v1/record', 'PUT', objParam, function(resp){
                 // 成功時は画面をリロードします
                 //location.reload(true);
+                    }, function(resp) {
+                        // エラー時はメッセージを表示して、処理を中断します
+                        //alert('error->' + resp.message);
+                        return;
+                    });     
+	
+}
+
+//指定されたレコードの住所等を更新する
+function update_master_sepinfo( id,name ) {
+	
+	var objParam = {};
+        objParam['app'] = kintone.app.getId();// アプリ番号
+        objParam['id'] = id;    // レコード番号
+        objParam['record'] = {};
+        objParam['record']['name'] = {}; // status    
+        objParam['record']['name']['value'] = name; 
+
+        // レコードを更新します
+        kintone.api('/k/v1/record', 'PUT', objParam, function(resp){
+                // 成功時もなにもせず
+				//		location.reload();
                     }, function(resp) {
                         // エラー時はメッセージを表示して、処理を中断します
                         //alert('error->' + resp.message);
@@ -278,8 +346,54 @@ function create_new_family() {
                 return false;
             }
 
-	create_master_and_show(regno,branch,zip,address,address2,chiiki,tel);
+	create_master_and_show(regno,branch,"",zip,address,address2,chiiki,tel);
 }
+
+//家族から分離
+function separate_family() {
+			var record = kintone.app.record.get();
+			
+			if( record["record"]["branch"]["value"] == "0" ) return; //branch 0の場合はなにもしない
+
+			var name = record["record"]["name"]["value"];
+			var id = record["record"]["recordno"]["value"];
+						
+//新しい新登録番号を用意する
+           var appId = kintone.app.getId();
+            var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId + '&query=branch=0' + encodeURI('order by recordno desc limit 1&fields[0]=regno');
+            var xmlHttp = new XMLHttpRequest();
+            var regno = 0;
+ 
+            // 同期リクエストを行う
+            xmlHttp.open("GET", appUrl, false);
+            xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
+            xmlHttp.send(null);
+ 
+            if (xmlHttp.status == 200){
+                if(window.JSON){
+                    var obj = JSON.parse(xmlHttp.responseText);
+                    if (obj.records[0] != null){
+                        try{
+                            regno = parseInt(obj.records[0]['regno'].value) +1;
+                        } catch(e){
+                            return false;
+                        }
+                    }
+                    
+                } else{
+                   return false;                }
+            } else{
+					return false;
+            }
+
+//新登録番号を振り直し、枝番を0のレコードを登録して表示する			
+			create_master_and_show(regno,"0",name,"","","","","");
+
+//現在のレコードに独立した情報を追加して再表示する
+			update_master_sepinfo( id,name + ":独立" )
+			
+}
+
 
 //紹介した人を新規登録
 function create_intro(){
@@ -539,11 +653,16 @@ function detail_page( event ) {
 //操作用ボタンの追加
 		var zip_btn = set_btn("zip_btn","郵便番号検索");
 		var fam_btn = set_btn("newfam_btn","家族を追加");
+		var fam_btn2 = set_btn("sepfam_btn","家族から独立");
 		var intro_btn = set_btn("intro_btn","新規登録の場合");
 		var intro_btn2 = set_btn("intro_btn2","検索して追加");
 		
-		$("#zip_btn").click( zip_to_addr);
+		$("#zip_btn").click( function() {
+			zip_to_addr();
+			zip_to_chiiki();
+			});
 		$("#newfam_btn").click( create_new_family);
+		$("#sepfam_btn").click( separate_family);
 		$("#intro_btn").click( create_intro);
 		$("#intro_btn2").click( create_intro2);
 		
@@ -604,7 +723,12 @@ function detail_page( event ) {
 		var zip_btn = set_btn("newfam_btn","家族を追加");
 		var zip_btn = set_btn("intro_btn","紹介した人を追加");
 		
-		$("#zip_btn").click( zip_to_addr);
+		$("#zip_btn").click( function() {
+			zip_to_chiiki();
+			zip_to_addr();
+
+			});
+
 		$("#newfam_btn").click( create_new_family);
 		$("#intro_btn").click( create_intro);
 

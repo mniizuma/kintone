@@ -46,6 +46,19 @@ width:150px;
 width:100px;
 }
 
+.viewtable td.name_col{
+width:160px;
+}
+
+.viewtable td.number_col{
+width:50px;
+text-align:right;
+}
+
+.viewtable td.th_number_col{
+width:50px;
+}
+
 .viewtable tbody tr.ng-scope:nth-child(2n+1) {
     background: #F0FFFF;
 }
@@ -83,3 +96,35 @@ width:100px;
 	color:#c7c3c3;
 }
 
+.sumtable {
+width: auto;
+border-collapse: collapse;
+border: 2px solid black;
+margin-bottom: 20px;
+margin-right: 20px;
+float: left
+}
+
+.sumtable caption {
+	caption-side: top; 
+	text-align: left; 
+	font-weight: bold;
+}
+
+.sumtable thead tr{
+width: 25%;
+padding: 6px;
+text-align: center;
+vertical-align: top;
+color: #333;
+background-color: #b5e0ed;
+border: 1px solid #b9b9b9;
+font-weight: bold;
+text-align: center;
+}
+
+.sumtable td{
+padding: 6px;
+background-color: #fff;
+border: 1px solid #b9b9b9;
+}

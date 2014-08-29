@@ -2,11 +2,11 @@
   <div id="members" ng-controller="Member.Ctrl">
 <table id="eventmemverlist" class="viewtable">
 <thead>
-<tr><td >イベント名</td><td>開催日</td><td></td><td></td></tr>
+<tr><td class="td.date_col">イベント番号</td><td >イベント名</td><td>開催日</td><td></td><td></td></tr>
 </thead>
 <tbody>
       <tr ng-repeat="member in members">
-        <td><a href="{{member.detaillink}}" target="_blank">{{member.eventname}}</a></td><td>{{member.date}}</td><td><a href="{{member.meibolink}}" target="_blank">印刷用名簿</a></td><td><a href="{{member.meibolink2}}" target="_blank">受付処理用名簿</a></td>
+        <td>{{member.id}}</td><td><a href="{{member.detaillink}}" target="_blank">{{member.eventname}}</a></td><td>{{member.date}}</td><td><a href="{{member.meibolink}}" target="_blank">印刷用名簿</a></td><td><a href="{{member.meibolink2}}" target="_blank">受付処理用名簿</a></td>
       </tr>
 </tbody>
 </table>

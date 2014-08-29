@@ -2,11 +2,11 @@
   <div id="members" ng-controller="Member.Ctrl">
 <table id="eventmemverlist" class="viewtable">
 <thead>
-<tr><td class="button_col"></td><td class="button_col"></td><td class="status_col">参加状況</td><td>イベント名</td><td class="date_col">新登録番号＋枝番</td><td>名前</td></tr>
+<tr><td class="button_col"></td><td class="button_col"></td><td class="status_col">参加状況</td><td>イベント名</td><td class="date_col">新登録番号＋枝番</td><td class="name_col">名前</td><td>電話</td><td class="name_col">会社名</td><td class="name_col">会社名よみ</td><td class="name_col">代理人</td><td class="th_number_col">他人数</td><td class="number_col"></td></tr>
 </thead>
 <tbody>
       <tr ng-repeat="member in members">
-        <td class="button_col"><input type="button" name="complete" id="{{member.id}}" value="参加" class="black"></td><td class="button_col"><input type="button" name="cancel" id="{{member.id}}" value="不参加" class="black"></td><td class="status_col">{{member.eventstatus}}</td><td>{{member.eventname}}</td><td class="code_col">{{member.meibocd}}</td><td>{{member.name}}</td>
+        <td class="button_col"><input type="button" name="complete" id="{{member.id}}" value="参加" class="black"></td><td class="button_col"><input type="button" name="cancel" id="{{member.id}}" value="不参加" class="black"></td><td class="status_col">{{member.eventstatus}}</td><td>{{member.eventname}}</td><td class="code_col">{{member.meibocd}}</td><td>{{member.name}}</td><td>{{member.tel}}</td><td class="name_col"><input type="text" size="10" name="company" id="company_{{member.id}}" value="{{member.company}}"></td><td><input type="text" size="10" name="company_yomi" id="company_yomi_{{member.id}}" value="{{member.company_yomi}}"></td><td><input type="text" size="10" name="dairi" id="dairi_{{member.id}}" value="{{member.dairi}}"></td><td class="number_col"><input type="number" name="others" id="others_{{member.id}}" value="{{member.others}}" style="width:25px;"></td><td class="button_col"><input type="button" name="save" id="{{member.id}}" value="保存" class="black"></td>
       </tr>
 </tbody>
 </table>
