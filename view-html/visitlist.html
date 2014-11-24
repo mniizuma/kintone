@@ -14,3 +14,42 @@
 <input type="button" value="訪問予定リストを作成" id="append" class="submit">
   </div>
 </div>
+<div id="procdialog" title="処理項目を選択して下さい">
+<select id="searchtype" name="searchtype">
+<option value="1" >次のいずれかを含む</option>
+<option value="2" selected >次のいずれも含まない</option>
+</select>
+<table id="procselect">
+<tr>
+<td width="120"><input type="checkbox" id="proc1" name="proc" value="転居先不明">転居先不明</td>
+<td width="120"><input type="checkbox" id="proc2" name="proc" value="転送先">転送先</td>
+<td width="120"><input type="checkbox" id="proc3" name="proc" value="転送元">転送元</td>
+</tr>
+<tr>
+<td><input type="checkbox" name="proc" id="proc4" value="手紙不要">手紙不要</td>
+<td><input type="checkbox" name="proc" id="proc5" value="手紙返却">手紙返却</td>
+<td><input type="checkbox" name="proc" id="proc6" value="連絡先有">連絡先有</td>
+</tr>
+<tr>
+<td><input type="checkbox" name="proc" id="proc7" value="仮設住宅">仮設住宅</td>
+<td><input type="checkbox" name="proc" id="proc8" value="他候補支持">他候補支持</td>
+<td><input type="checkbox" name="proc" id="proc9" value="陳情">陳情</td>
+</tr>
+<tr>
+<td><input type="checkbox" name="proc" id="proc10" value="支援拒否">支援拒否</td>
+<td><input type="checkbox" name="proc" id="proc11" value="解消先">解消先</td>
+<td><input type="checkbox" name="proc" id="proc12" value="死亡">死亡</td>
+</tr>
+<tr>
+<td><input type="checkbox" name="proc" id="proc13" value="市外へ転出">市外へ転出</td>
+<td><input type="checkbox" name="proc" id="proc14" value="退職">退職</td>
+<td><input type="checkbox" name="proc" id="proc15" value="電話不通">電話不通</td>
+</tr>
+<tr>
+<td><input type="checkbox" name="proc" id="proc16" value="その他">その他</td>
+<td><input type="checkbox" name="proc" id="procdel" value="重複のため削除データへ">重複のため削除</td>
+</tr>
+
+</table>
+
+</div>

@@ -50,7 +50,7 @@ function zip_to_addr() {
                 
 		$.ajax({
         	type : 'get',
-            url : 'http://maps.googleapis.com/maps/api/geocode/json',
+            url : 'https://maps.googleapis.com/maps/api/geocode/json',	//https側を利用すること 
             crossDomain : true,
             dataType : 'json',
             data : {
@@ -122,6 +122,26 @@ function zip_to_chiiki(){
 	}
 	
 }
+
+//指定されたレコードセットで新しいレコードを登録し詳細画面を表示する
+function create_master_by_record( record ) {
+        var objParam = {};
+		var appId = kintone.app.getId();
+        objParam['app'] = appId;// アプリ番号
+        objParam['record'] = record;
+
+        // レコードを登録
+       kintone.api('/k/v1/record', 'POST', objParam, function(resp){
+	   		window.open("/k/"+appId+"/show#record=" + resp.id + "&mode=edit","",""); //編集モードで表示
+
+                    }, function(resp) {
+                        // エラー時はメッセージを表示して、処理を中断します
+                        //alert('error->' + resp.message);
+                        return;
+                    });     
+
+    }
+
 
 //指定された新登録番号で新しいレコードを登録し詳細画面を表示する
 function create_master_and_show( regno, branch,name,zip,address,address2,chiiki,tel ) {
@@ -386,8 +406,32 @@ function separate_family() {
 					return false;
             }
 
-//新登録番号を振り直し、枝番を0のレコードを登録して表示する			
-			create_master_and_show(regno,"0",name,"","","","","");
+//新登録番号を振り直し、枝番を0のレコードを登録して表示する
+			var	new_record = {};
+			for( var key in record["record"]) {
+				if( key.indexOf("$") !=0  ) {
+					switch (key) {
+						case "作成日時":
+						case "更新日時":
+						case "作成者":
+						case "更新者":
+						case "recordno":
+							continue;
+						default:
+							new_record[key] = {};
+							new_record[key]["value"] = record["record"][key]["value"];
+							break;	
+					}
+				} 
+			}
+			new_record["regno"]["value"] = regno;
+			new_record["branch"]["value"] = "0";
+			new_record["zip1"]["value"] = "";
+			new_record["Address"]["value"] = "";
+			new_record["Address1_2"]["value"] = "";
+			new_record["tel1"]["value"] = "";
+			
+			create_master_by_record(new_record);
 
 //現在のレコードに独立した情報を追加して再表示する
 			update_master_sepinfo( id,name + ":独立" )
@@ -445,10 +489,37 @@ function change_vstatus(event) {
 	}
 	
 }
+//新規レコード登録時の処理
+function create_submit_detail(event) {
+	var record = event.record;
+	//新登録番号＋枝番の重複チェック
+	var branch = record["branch"]["value"];
+	var regno = record["regno"]["value"];
+	var appId = kintone.app.getId();
+    var appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId + encodeURI('&query=branch='+branch + ' and regno='+regno+ 'order by recordno desc &fields[0]=recordno');
+    var xmlHttp = new XMLHttpRequest();
+ 
+    // 同期リクエストを行う
+    xmlHttp.open("GET", appUrl, false);
+    xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
+    xmlHttp.send(null);
+ 
+    if (xmlHttp.status == 200) {
+	    if(window.JSON) {
+			var obj = JSON.parse(xmlHttp.responseText);
+			if(obj.records.length > 0 ) {
+				  event.error = '新規登録番号＋枝番が重複しています';
+				  return event;
+			}
+	    }
+    }
+}
 
-//詳細画面保存時の処理
+//
+//レコード編集後詳細画面保存時の処理
 function submit_detail(event) {
 	var record = event.record;
+
 	
 	//訪問状況が変更された場合は訪問履歴に追加する
 	if(vstatus_flg) {
@@ -473,11 +544,11 @@ function submit_detail(event) {
 		record["intro_name"]["value"] = "";
 
 	}
+	
 //家族がいる場合の住所等の自動変更
-
 	var branch = record["branch"]["value"];
-	if( branch != "0" ) return(event); //家族の場合は処理しない
 	var regno = record["regno"]["value"];
+	if( branch != "0" ) return(event); //家族の場合は処理しない
 	
 	//家族の住所等に筆頭者の住所等をあわせる
 	var appId = kintone.app.getId();
@@ -647,6 +718,96 @@ function create_intro2(){
 		$( "#intro_dialog" ).dialog("open");
 }
 
+//
+//この支援者を紹介した人　現在の名簿cd=紹介者名簿の、meibocd2 
+//
+function intro_view(meibocd,type)
+{
+		var tblarea = "intro_view1";
+		var tblname = "intro_viewtbl1";
+		var key1 = "meibocd2";
+		var key2 = "meibocd";	
+		var title = "この支援者を紹介した人"
+	
+		//tableの定義
+		if(type!=0) {
+			tblarea = "intro_view2";
+			tblname = "intro_viewtbl2";
+			key1 = "meibocd";
+			key2 = "meibocd2";	
+			title = "この支援者が紹介した人"
+			
+		} 
+		var area = kintone.app.record.getSpaceElement(tblarea);
+		var label  = document.createElement('div');
+        label.setAttribute('id', tblarea);
+        label.setAttribute('class', 'control-label-gaia');
+        area.appendChild(label);
+        $("#"+tblarea).append('<span class="control-label-text-gaia">'+title+'</span>');
+
+		var tbl = document.createElement('table');
+        tbl.setAttribute('id', tblname);
+        tbl.setAttribute('name', tblname);
+        tbl.setAttribute('class', 'introtable');
+        area.appendChild(tbl);
+        $("#"+tblname).append('<thead><tr><th class="name">名前</th><th class="address">住所</th></tr></thead><tbody>');
+
+		var records=[];
+		var intro_appId = kintone.app.getRelatedRecordsTargetAppId("intro_record1");//紹介者名簿アプリのID取得
+
+		var appId = kintone.app.getId();
+		var appUrl = kintone.api.url('/k/v1/records') + '?app='+ intro_appId + encodeURI('&query=' + key1 + '="' + meibocd +'"' + 'order by name asc');
+		var xmlHttp = new XMLHttpRequest();
+ 
+		// 同期リクエストを行う
+		xmlHttp.open("GET", appUrl, false);
+		xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
+		xmlHttp.send(null);
+ 
+		if (xmlHttp.status == 200){
+    		      if(window.JSON){
+     	    	       var obj = JSON.parse(xmlHttp.responseText);
+	 				   if (obj.records[0] != null){
+                      	  try{
+							var records = obj.records;
+							} catch(e){
+                          }
+                    }
+                }
+           }
+
+		for( var i=0;i < records.length;i++ ) {
+		  	var record = records[i];
+		  	//後援会名簿から名前以外の情報を検索する
+		  	var appId = kintone.app.getId();
+		  	appUrl = kintone.api.url('/k/v1/records') + '?app='+ appId + encodeURI('&query=meibocode="' + record[key2]["value"] +'"' + 'order by name asc');
+		  	xmlHttp = new XMLHttpRequest();
+ 
+		  	// 同期リクエストを行う
+		  	xmlHttp.open("GET", appUrl, false);
+		  	xmlHttp.setRequestHeader('X-Requested-With','XMLHttpRequest');
+		  	xmlHttp.send(null);
+ 
+		  	if (xmlHttp.status == 200){
+    		      if(window.JSON){
+     	    	       var obj = JSON.parse(xmlHttp.responseText);
+	 				   if (obj.records[0] != null){
+                      	  try{
+							var meiborecords = obj.records;
+							} catch(e){
+                          }
+                          	var this_tr = '<tr><td class="name"><a href="/k/'+appId+ "/show#record=" + meiborecords[0].recordno.value +'" target="_blank" </a>'+ meiborecords[0].name.value + '</td><td class="address">' + meiborecords[0].Address.value + "</td></tr>";
+						  	$("#"+tblname).append(this_tr);
+
+						}
+                	}
+           		}
+
+		   }
+		$("#"+tblname).append("</tbody>");
+
+}
+
 
 //詳細画面表示・編集用
 function detail_page( event ) {
@@ -658,8 +819,8 @@ function detail_page( event ) {
 		var intro_btn2 = set_btn("intro_btn2","検索して追加");
 		
 		$("#zip_btn").click( function() {
-			zip_to_addr();
 			zip_to_chiiki();
+			zip_to_addr();
 			});
 		$("#newfam_btn").click( create_new_family);
 		$("#sepfam_btn").click( separate_family);
@@ -698,18 +859,28 @@ function detail_page( event ) {
 　　　		}
 　　		});
 
-//家族の場合住所等を編集不可にしておく
 
 		var record = event.record;
-		
+
+//この人を紹介した人の一覧表示
+		intro_view(record["meibocode"]["value"],0 );
+
+//この人が紹介した人の一覧表示
+		intro_view(record["meibocode"]["value"],1 );
+//参照レコードを非表示に		
+		kintone.app.record.setFieldShown('intro_record1', false);
+		kintone.app.record.setFieldShown('intro_record2', false);
+				
 		if(record["branch"]["value"] == "0" ) return(event);
-		
-		record["chiiki1"]["disabled"] = true;
-		record["zip1"]["disabled"] = true;
-		record["Address"]["disabled"] = true;
-		record["Address1_2"]["disabled"] = true;
-		record["tel1"]["disabled"] = true;
-		
+
+//家族の場合住所等を編集不可にしておく
+// 家族のみの対応を一時期行っていたが取り消しに 2014/11/23		
+//		record["chiiki1"]["disabled"] = true;
+//		record["zip1"]["disabled"] = true;
+//		record["Address"]["disabled"] = true;
+//		record["Address1_2"]["disabled"] = true;
+//		record["tel1"]["disabled"] = true;
+
 		return(event);
 
 }
@@ -779,5 +950,6 @@ function detail_page( event ) {
 	    //レコード編集の場合
 	    kintone.events.on('app.record.edit.show', detail_page );
 	    //保存前の処理
+	    kintone.events.on('app.record.create.submit', create_submit_detail );    
 	    kintone.events.on('app.record.edit.submit', submit_detail );    
         })();

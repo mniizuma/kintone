@@ -6,6 +6,7 @@ var map;
 var gc;
 var markers = [];
 var current_rec=0;
+var current_viewid=0;
  
 (function () {
     "use strict";
@@ -221,13 +222,50 @@ var current_rec=0;
         
     }
    
- 
+	//
     //訪問予定一覧用function    
+    //
     function visitview (e) {
         var i;
         var members = new Array();
         var appId = kintone.app.getId();
          
+//一覧の上部あき部分に処理項目検索用ボタンを設定,登録済みの場合はいったん削除 
+        var btn_check = document.getElementById('vipselect');
+        if (!btn_check){//ボタンが未作成の場合作成する
+            var myVipbtn = document.createElement('button');
+            myVipbtn.id = 'vipselect';
+            myVipbtn.innerHTML = '重要支援者抽出';
+        
+            var myIndexButton = document.createElement('button');
+            myIndexButton.id = 'procsearch';
+            myIndexButton.innerHTML = '処理項目設定';
+			kintone.app.getHeaderMenuSpaceElement().appendChild(myVipbtn);
+			kintone.app.getHeaderMenuSpaceElement().appendChild(myIndexButton);
+
+			}
+      
+		//dialogの初期設定		
+		$( "#procdialog" ).dialog({
+　　		　autoOpen: false,
+　　		　modal: true,
+　　		　buttons: {
+　　		　　"適用する": function(){
+				add_procfilter();//選択された処理項目を元にフィルターを追加する
+				$(this).dialog('close');
+　　　　			},
+　　		　　"閉じる": function(){
+				$(this).dialog('close');
+　　　　			}
+　　　		}
+　　		});
+
+        $("#procsearch").click(function(){
+	       	$( "#procdialog" ).dialog("open");
+        });
+
+        $("#vipselect").click(vip_select);
+  
         for (i = 0; i < e.records.length; i++) {
                 var record = e.records[i];
                 var detail_link = "/k/"+appId+"/show#record=" + record.recordno.value; 
@@ -708,28 +746,57 @@ var current_rec=0;
 		    
 			}
 	    
-		var detaillink = "/k/"+appId+"/?view=135057&query=" + encodeURI(query);
+		var detaillink = "/k/"+appId+"/?view=" + current_viewid + "&query=" + encodeURI(query);
 
 		window.open(detaillink,"_self" );
 	    }
     
-    //印刷リスト作成
+		//重要支援者の検索条件を追加して抽出し、一覧を再表示する
+		function vip_select() {
+	        var appId = kintone.app.getId();
+
+//			var vipquery = '((branch="0") and ((m_stat in(1,2)) or (y_stat in (1,2))))';
+			var vipquery = '(((branch="0") and ((m_stat in(1,2)) or (y_stat in (1,2)))) or ((branch != "0") and (hittou.m_stat not in (1,2)) and (hittou.y_stat not in (1,2))) and ((m_stat in(1,2)) or (y_stat in (1,2))))';
+
+			var query = kintone.app.getQueryCondition();//query 部分を取得
+			var queryall = kintone.app.getQuery();//現状のquery全体を取得
+			var queryetc=queryall.substr(queryall.indexOf("order"));　//order以降を切り出し
+			if(!query) {
+		    	query =  vipquery+" " + queryetc;
+	    	}else {
+				query =  vipquery + "and (" + query + ") "+ queryetc;
+				}
+	
+			var viplink = "/k/"+appId+"/?view="+ current_viewid + "&query=" + encodeURI(query);
+			window.open(viplink,"_self" );
+		
+        }
+    
+    //
+    //印刷リスト作成ビュー
     function printview( e ) {
 	     var i;
         var members = new Array();
         var appId = kintone.app.getId();
          
        //一覧の上部あき部分に処理項目検索用ボタンを設定,登録済みの場合はいったん削除 
-        var btn_check = document.getElementById('my_index_button');
+        var btn_check = document.getElementById('vipselect');
         if (!btn_check){//ボタンが未作成の場合作成する
+            var myVipbtn = document.createElement('button');
+            myVipbtn.id = 'vipselect';
+            myVipbtn.innerHTML = '重要支援者抽出';
         
             var myIndexButton = document.createElement('button');
             myIndexButton.id = 'procsearch';
             myIndexButton.innerHTML = '処理項目設定';
 
-			}
-		kintone.app.getHeaderMenuSpaceElement().appendChild(myIndexButton);
+			kintone.app.getHeaderMenuSpaceElement().appendChild(myVipbtn);
+			kintone.app.getHeaderMenuSpaceElement().appendChild(myIndexButton);
 
+			}
+
+        $("#vipselect").click(vip_select);
+        
 		//dialogの初期設定		
 		$( "#procdialog" ).dialog({
 　　		　autoOpen: false,
@@ -774,6 +841,7 @@ var current_rec=0;
     
     // 一覧ビューの表示イベント
     kintone.events.on('app.record.index.show', function(e) {
+	    current_viewid = e.viewId; //現在のビューIDをセット
         switch (e.viewId) {
             case 134598://訪問予定リスト作成
                    //訪問予定一覧用function

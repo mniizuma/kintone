@@ -9,7 +9,7 @@ padding: 6px;
 text-align: left;
 vertical-align: top;
 color: #333;
-background-color: #b5e0ed;
+background-color: #e5e5e5;
 border: 1px solid #b9b9b9;
 font-weight: bold;
 text-align: center;
@@ -128,3 +128,52 @@ padding: 6px;
 background-color: #fff;
 border: 1px solid #b9b9b9;
 }
+
+.introtbl {
+width: 100%;
+border-collapse: collapse;
+}
+
+/*スクロール用*/
+.introtable thead {
+  display:block;
+}
+.introtable tbody {
+  display:block;
+  overflow:auto;
+  height:150px;
+}
+
+.introtable thead tr{
+width: 25%;
+padding: 6px;
+text-align: left;
+vertical-align: top;
+color: #333;
+background-color: #e5e5e5;
+border: 1px solid #b9b9b9;
+font-weight: bold;
+text-align: center;
+}
+
+.introtable th{
+table-layout:fixed;
+padding: 6px;
+border: 1px solid #b9b9b9;
+}
+
+.introtable td{
+table-layout:fixed;
+padding: 6px;
+background-color: #fff;
+border: 1px solid #b9b9b9;
+}
+
+.introtable td.name,th.name{
+width:120px;
+}
+
+.introtable td.address,th.address{
+width:350px;
+}
+
